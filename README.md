@@ -18,14 +18,32 @@ Note: Flakes must be enabled.
 #### Nix shell
 `nix run github:preprocessor/rsakura`
 #### Nix flake input
+
+`flake.nix`
 ```nix
 {
   inputs.rsakura.url = "github:preprocessor/rsakura";
 
-  outputs = { self, nixpkgs, rsakura }: {
-    # Use the overlay
-    nixpkgs.overlays = [ rsakura.overlays.default ];
+  outputs = {nixpkgs, ...} @ inputs: {
+    nixosConfigurations.HOSTNAME = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit inputs; }; # this is the important part
+      modules = [
+        ./configuration.nix
+      ];
+    };
   };
+}
+```
+`configuration.nix`
+```nix
+{inputs, pkgs, ...}: {
+     # Use the overlay
+    nixpkgs.overlays = [ rsakura.overlays.default ];
+
+    # Add the package to your systemPackages
+    environment.systemPackages = [
+        pkgs.rsakura
+    ];
 }
 ```
 
